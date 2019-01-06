@@ -14,26 +14,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-
-#define UNUSED(expr) do { (void)(expr); } while (0)
-
-#define VERIFY(x) if (!(x)) {\
-		  	nErr = -1;\
-			goto bail;\
-		  }
-
-typedef struct node NODE;
-typedef struct queue QUEUE;
-
-struct node {
-	int num;
-	NODE *next;
-};
-
-struct queue {
-	NODE *head;
-	NODE *tail;
-};
+#include "queue.h"
 
 NODE *create_node(int num)
 {
@@ -97,34 +78,4 @@ void print_queue(QUEUE *q)
 		tmpHead = tmpHead->next;
 	}
 	printf ("\n");
-}
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-
-int main(void)
-{
-	QUEUE q = {NULL, NULL};
-	int testNums [] = {3, 4, 12, 98, 7,90, 23, 27, 65, 89, 10, 12};
-	unsigned int i = 0;
-
-
-	dequeue(&q);
-	for (i = 0; i < ARRAY_SIZE(testNums); i++) {
-		enqueue(&q, testNums[i]);
-	}
-
-	print_queue(&q);
-	dequeue(&q);
-	print_queue(&q);
-	dequeue(&q);
-	print_queue(&q);
-	dequeue(&q);
-	print_queue(&q);
-	dequeue(&q);
-	print_queue(&q);
-	dequeue(&q);
-	dequeue(&q);
-	dequeue(&q);
-	dequeue(&q);
-	return 0;
 }

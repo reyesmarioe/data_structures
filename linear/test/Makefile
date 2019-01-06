@@ -1,13 +1,13 @@
 CC = gcc # C compiler
 CFLAGS = -fPIC -Wall -Wextra -O2 -g # C flags
-INCLUDE         = -Iinc
+INCLUDE         = -I../queue/inc
 src 		= src/test_queue.cpp
 obj 		= $(src:.cpp=.o)
 
 CPPFLAGS      	+= $(INCLUDE)
 
 
-test_queue:	$(obj) libqueue.a
+test_queue:	$(obj) ../queue/libqueue.a
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
@@ -15,4 +15,4 @@ test_queue:	$(obj) libqueue.a
 
 .PHONY: libqueue
 libqueue:
-	make -f MakefileLIB
+	make -f ../queue/MakefileLIB
