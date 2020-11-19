@@ -1,0 +1,20 @@
+CC=g++
+src = $(wildcard src/*.c)
+obj = $(src:.c=.o)
+bin = linked_list_test
+
+CFLAGS= -I../../linked_list -I../../linked_list/inc
+LDFLAGS=-L../../linked_list/lib -llinked_list
+
+
+.PHONY: all
+all: $(bin) libs
+
+$(bin): $(obj)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
+
+
+.PHONY: libs
+libs:
+	$(MAKE) -C ../../linked_list
+
