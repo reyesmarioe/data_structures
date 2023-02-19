@@ -4,9 +4,11 @@
  * 02/19/2021
  *
  * This is my own source code.
+ * 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
  */
 #include <stdio.h>
 #include <stdlib.h>
+
 
 typedef struct node {
     int item;
@@ -29,7 +31,7 @@ typedef struct heap {
  * OUTPUT
  * 	None
  */
-void init_heap(HEAP *h, int heapSize)
+void StartHeap(HEAP *h, int heapSize)
 {
     printf ("Setting heap size to %d\n", heapSize);
     h->arr = (NODE*)malloc(sizeof(NODE) * heapSize);
@@ -47,15 +49,18 @@ void data_swap(NODE *n1, NODE *n2)
     *n2 = temp;
 }
 
-int heapify_down(HEAP *h, int lastNodeIndex)
+int HeapifyDown(HEAP *h, int lastNodeIndex)
 {
     int parentNodeIndex = 0;
 
     // Put node where it corresponds
-    while (lastNodeIndex) {
+    while (lastNodeIndex > 0) {
         parentNodeIndex = (lastNodeIndex - 1) / 2;
+        if (0 == parentNodeIndex) {
+            break;
+        }
 
-        printf("%d %d\n", h->arr[parentNodeIndex].orderingValue, h->arr[lastNodeIndex].orderingValue); 
+        printf("Order %d Order %d\n", h->arr[parentNodeIndex].orderingValue, h->arr[lastNodeIndex].orderingValue); 
         /* 
          * This is a MIN HEAP ( note the '<')
          */
@@ -69,6 +74,7 @@ int heapify_down(HEAP *h, int lastNodeIndex)
         data_swap(&(h->arr[parentNodeIndex]), &(h->arr[lastNodeIndex]));
         lastNodeIndex = parentNodeIndex;
     }
+    return 0;
 }
 
 /*
@@ -78,11 +84,9 @@ int heapify_down(HEAP *h, int lastNodeIndex)
  * 	h		-	Pointer to allocated heap memory where we are storing the heap data
  * 	n		-	Data to store
  */
-void insert_heap(HEAP *h, int n, int orderingValue)
+void Insert(HEAP *h, int n, int orderingValue)
 {
-    int parentNodeIndex, lastNodeIndex;
-    int tempNode;
-
+    int lastNodeIndex;
 
     if (NULL == h) {
         printf("No heap memory allocated");
@@ -100,11 +104,11 @@ void insert_heap(HEAP *h, int n, int orderingValue)
     h->arr[lastNodeIndex].orderingValue = orderingValue;
     printf ("Inserting %d, Ordering %d\n", n, orderingValue);
 
-    heapify_down(h, lastNodeIndex);
+    HeapifyDown(h, lastNodeIndex);
 }
 
 #if 0
-int heapify_up(HEAP *h, int lastNodeIndex)
+int HeapifyUp(HEAP *h, int lastNodeIndex)
 {
     int parentNodeIndex = 0;
 
@@ -181,7 +185,7 @@ void heapify_recursive(HEAP *h, int parentNode)
     }
 }
 
-int find_min(HEAP *h)
+int FindMin(HEAP *h)
 {
     return h->arr[0].item;
 }
@@ -197,7 +201,6 @@ int find_min(HEAP *h)
  */
 int delete_node(HEAP *h, int nodeIndex)
 {
-    int rootIndex = 0;
     int maxNum = 0;
     int parentNodeIndex = 0;
 
@@ -230,17 +233,17 @@ void print_heap(HEAP *h)
 
 int main()
 {
-    HEAP h = { 0 };
+    HEAP h; 
     int arr[] = { 1245, 12, 33, 3, 6, 100, 75 };
     int aSize = sizeof(arr) / sizeof(int);
-    int i;
-    init_heap(&h, aSize);
 
-    insert_heap(&h, arr[1], 0);
-    insert_heap(&h, arr[0], 1);
-    insert_heap(&h, arr[3], 2);
-    insert_heap(&h, arr[4], 3);
-    insert_heap(&h, arr[2], 4);
+    StartHeap(&h, aSize);
+
+    Insert(&h, arr[1], 0);
+    Insert(&h, arr[0], 1);
+    Insert(&h, arr[3], 2);
+    Insert(&h, arr[4], 3);
+    Insert(&h, arr[2], 4);
 
     print_heap(&h);
 
