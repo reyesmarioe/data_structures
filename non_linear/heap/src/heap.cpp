@@ -1,16 +1,10 @@
 /* 
- * mreye22
+ * Mario Reyes (mreye22)
  * CSC 482
- * 2/19/2023
- *
+ * 2/23/2023
  *
  * NOTE: This code is my own implementation
  *
- * It is missing the following APIs:
- *
- * 	ChangeKey(item, newValue)
- *
- * I will resubmit (hope this is ok even if late grade) with complete implementation this week
  */	
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,17 +24,28 @@ typedef struct heap {
 
 int get_node_child_left(int parentNode)
 {
-	return (parentNode * 2) + 1;
+    return (parentNode * 2) + 1;
 }
 
 int get_node_child_right(int parentNode)
 {
-	return (parentNode * 2) + 2;
+    return (parentNode * 2) + 2;
 }
 
 int get_node_parent(int nodeIndex)
 {
-	return (nodeIndex - 1) / 2;
+    return (nodeIndex - 1) / 2;
+}
+
+void print_heap(HEAP *h)
+{
+    int i;
+    for (i = 0; i < h->nodeCount; i++) {
+        printf("(Item %d, Priority %d, Position %d) ", 
+               h->arr[i].item, h->arr[i].priority, h->position[h->arr[i].item]);
+
+    }
+    printf ("\n");
 }
 
 /*
@@ -54,53 +59,50 @@ int get_node_parent(int nodeIndex)
  */
 void StartHeap(HEAP *h, int heapSize)
 {
-	printf ("Setting heap size to %d\n", heapSize);
-	h->arr = (NODE*)malloc(sizeof(NODE) * heapSize);
-	h->position = (int*)malloc(sizeof(int) * heapSize);
-	h->heapSize = heapSize;
-	h->nodeCount = 0;
+    printf ("Setting heap size to %d\n", heapSize);
+    if (NULL == (h->arr = (NODE*)malloc(sizeof(NODE) * heapSize))) {
+        printf ("malloc failed\n");
+        return;
+    }
 
-	// Init hash table to know values
-	memset((void*)h->position, -1, heapSize * sizeof(int));
+    if (NULL == (h->position = (int*)malloc(sizeof(int) * heapSize))) {
+        printf ("malloc failed\n");
+        return;
+    }
+
+    h->heapSize = heapSize;
+    h->nodeCount = 0;
+
+    // Init hash table to know values
+    memset((void*)h->position, -1, heapSize * sizeof(int));
 }
 
 int get_hash_key(HEAP *h, int value)
 {
-	return value % h->heapSize;
+    return value % h->heapSize;
 }
 
 void data_swap(NODE *n1, NODE *n2)
 {
-	NODE temp;
+    NODE temp;
 
-	temp = *n1;
-	*n1 = *n2;
-	*n2 = temp;
-}
-
-int hash_index(HEAP *h, int item)
-{
-	return item % h->heapSize;
+    temp = *n1;
+    *n1 = *n2;
+    *n2 = temp;
 }
 
 int save_item_position(HEAP *h, int item, int itemPosition)
 {
-	int hashIndex = 0;
+    int hashIndex = 0;
 
-	hashIndex = get_hash_key(h, item);
-        printf ("item %d, itemPostion %d, hashIndex %d\n", item, itemPosition, hashIndex);
-        /*
-	// Find an available hash map slot
-	while (h->position[hashIndex] != -1) {
-            printf("Look for another position\n");
-		++hashIndex;
-	}
-        */
-	
-        printf ("Hash Index %d\n", h->position[hashIndex]);
-	h->position[hashIndex] = itemPosition;
-        printf ("Position %d saved\n", h->position[hashIndex]);
-        return 0;
+    hashIndex = get_hash_key(h, item);
+    printf ("item %d, itemPostion %d, hashIndex %d\n", 
+            item, itemPosition, hashIndex);
+
+    printf ("Hash Index %d\n", h->position[hashIndex]);
+    h->position[hashIndex] = itemPosition;
+    printf ("Position %d saved\n", h->position[hashIndex]);
+    return 0;
 }
 /*
  * Inserts data into heap
@@ -109,46 +111,43 @@ int save_item_position(HEAP *h, int item, int itemPosition)
  * 	h		-	Pointer to allocated heap memory where we are storing the heap data
  * 	n		-	Data to store
  */
-void Insert(HEAP *h, int item, int priority)
+int Insert(HEAP *h, int item, int priority)
 {
-	int parentNodeIndex, lastNodeIndex;
+    int parentNodeIndex, lastNodeIndex;
 
-	if (NULL == h) {
-		printf("No heap memory allocated");
-		return;
-	}
+    if (NULL == h) {
+        printf("No heap memory allocated");
+        return -1;
+    }
 
-	if (h->nodeCount > h->heapSize) {
-		printf("Heap is full %d\n", h->nodeCount + 1);
-		return;
-	}
+    if (h->nodeCount > h->heapSize) {
+        printf("Heap is full %d\n", h->nodeCount + 1);
+        return -1;
+    }
 
-	// Insert node to last available position first
-	lastNodeIndex = h->nodeCount++;
-        printf ("lastNodeIndex %d, item %d, priority %d\n", lastNodeIndex, item, priority);
-	h->arr[lastNodeIndex].item = item;
-	h->arr[lastNodeIndex].priority = priority;
-	// Keep track of where items are stored
-	//h->position[item] = lastNodeIndex;
+    // Insert node to last available position first
+    lastNodeIndex = h->nodeCount++;
+    printf ("lastNodeIndex %d, item %d, priority %d\n", lastNodeIndex, item, priority);
+    h->arr[lastNodeIndex].item = item;
+    h->arr[lastNodeIndex].priority = priority;
 
-//	printf ("Inserting %d - Order %d, Index %d\n", item, priority, h->position[item]);
+    // And put node where it corresponds
+    while (lastNodeIndex) {
+        parentNodeIndex = (lastNodeIndex - 1) / 2;
 
-	// And put node where it corresponds
-	while (lastNodeIndex) {
-		parentNodeIndex = (lastNodeIndex - 1) / 2;
+        if (h->arr[parentNodeIndex].priority <= h->arr[lastNodeIndex].priority) {
+            break;
+        }
 
-		if (h->arr[parentNodeIndex].priority <= h->arr[lastNodeIndex].priority) {
-			break;
-		}
-
-		/*
-		 * move value up in the heap
-		 */
-		data_swap(&(h->arr[parentNodeIndex]), &(h->arr[lastNodeIndex]));
-		lastNodeIndex = parentNodeIndex;
-	}
-        save_item_position(h, item, lastNodeIndex);
-        printf ("After save\n");
+        /*
+         * move value up in the heap
+         */
+        data_swap(&(h->arr[parentNodeIndex]), &(h->arr[lastNodeIndex]));
+        lastNodeIndex = parentNodeIndex;
+    }
+    // Keep track of where items are stored
+    save_item_position(h, item, lastNodeIndex);
+    return 0;
 }
 
 /*
@@ -163,26 +162,26 @@ void Insert(HEAP *h, int item, int priority)
  */
 void HeapifyDown(HEAP *h, int parentNode)
 {
-        int position = 0;
-	int maxNode = parentNode;
-	int left = (parentNode * 2) + 1;
-	int right = (parentNode * 2) + 2;
+    int position = 0;
+    int maxNode = parentNode;
+    int left = (parentNode * 2) + 1;
+    int right = (parentNode * 2) + 2;
 
-	if (left < h->nodeCount && h->arr[left].priority < h->arr[maxNode].priority) {
-		maxNode = left;
-	}
+    if (left < h->nodeCount && h->arr[left].priority < h->arr[maxNode].priority) {
+        maxNode = left;
+    }
 
-	if (right < h->nodeCount && h->arr[right].priority < h->arr[maxNode].priority) {
-		maxNode = right;
-	}
+    if (right < h->nodeCount && h->arr[right].priority < h->arr[maxNode].priority) {
+        maxNode = right;
+    }
 
-	if (maxNode != parentNode) {
-		data_swap(&(h->arr[parentNode]), &(h->arr[maxNode]));
-                position = h->position[h->arr[parentNode].item];
-                h->position[h->arr[parentNode].item] = h->position[h->arr[maxNode].item];
-                h->position[h->arr[maxNode].item] = position;
-		HeapifyDown(h, maxNode);
-        }
+    if (maxNode != parentNode) {
+        data_swap(&(h->arr[parentNode]), &(h->arr[maxNode]));
+        position = h->position[h->arr[parentNode].item];
+        h->position[h->arr[parentNode].item] = h->position[h->arr[maxNode].item];
+        h->position[h->arr[maxNode].item] = position;
+        HeapifyDown(h, maxNode);
+    }
 }
 
 /*
@@ -197,31 +196,31 @@ void HeapifyDown(HEAP *h, int parentNode)
  */
 void HeapifyUp(HEAP *h, int parentNode)
 {
-        int position = 0;
-	int maxNode = parentNode;
-	int left = (parentNode * 2) + 1;
-	int right = (parentNode * 2) + 2;
+    int position = 0;
+    int maxNode = parentNode;
+    int left = (parentNode * 2) + 1;
+    int right = (parentNode * 2) + 2;
 
-	if (left < h->nodeCount && h->arr[left].priority > h->arr[maxNode].priority) {
-		maxNode = left;
-	}
+    if (left < h->nodeCount && h->arr[left].priority > h->arr[maxNode].priority) {
+        maxNode = left;
+    }
 
-	if (right < h->nodeCount && h->arr[right].priority > h->arr[maxNode].priority) {
-		maxNode = right;
-	}
+    if (right < h->nodeCount && h->arr[right].priority > h->arr[maxNode].priority) {
+        maxNode = right;
+    }
 
-	if (maxNode != parentNode) {
-		data_swap(&(h->arr[parentNode]), &(h->arr[maxNode]));
-                position = h->position[h->arr[parentNode].item];
-                h->position[h->arr[parentNode].item] = h->position[h->arr[maxNode].item];
-                h->position[h->arr[maxNode].item] = position;
-		HeapifyUp(h, maxNode);
-	}
+    if (maxNode != parentNode) {
+        data_swap(&(h->arr[parentNode]), &(h->arr[maxNode]));
+        position = h->position[h->arr[parentNode].item];
+        h->position[h->arr[parentNode].item] = h->position[h->arr[maxNode].item];
+        h->position[h->arr[maxNode].item] = position;
+        HeapifyUp(h, maxNode);
+    }
 }
 
 int FindMin(HEAP *h)
 {
-	return h->arr[0].item;
+    return h->arr[0].item;
 }
 
 /*
@@ -236,8 +235,6 @@ int FindMin(HEAP *h)
 int Delete(HEAP *h, int nodeIndex)
 {
     int minNum = 0;
-    int position = 0;
-    int lastItem = 0;
 
     if (!h->nodeCount) {
         printf("\nHeap is empty!\n");
@@ -245,94 +242,71 @@ int Delete(HEAP *h, int nodeIndex)
     }
 
     minNum = h->arr[nodeIndex].item;
-    printf ("Number to delete %d, position %d\n", minNum, nodeIndex);
 
-//j.    h->arr[nodeIndex] = h->arr[--h->nodeCount];
-   // h->arr[h->nodeCount].item = 0;
+    lastItem = h->arr[h->nodeCount - 1].item;
 
 
+    HeapifyDown(h, 0);
 
-        lastItem = h->arr[h->nodeCount - 1].item;
-        printf("Positions to swap %d %d\n", position, h->position[lastItem]);
-
-
-        data_swap(&(h->arr[nodeIndex]), &(h->arr[h->nodeCount - 1]));
-        position = h->position[nodeIndex];
-        h->position[nodeIndex] = h->position[lastItem];
-        h->position[lastItem] = position;
-
-
-    // Heapify on the root node
-    HeapifyDown(h, nodeIndex);
+    // Decrease number of nodes
     --h->nodeCount;
     return minNum;
 }
 
 int ExtractMin(HEAP *h)
 {
-	Delete(h, 0);
-        return 0;
+    Delete(h, 0);
+    return 0;
 }
 
 int DeleteItem(HEAP *h, int item)
 {
-	Delete(h, h->position[item]);
-        return 0;
+    Delete(h, h->position[item]);
+    return 0;
 }
 
 int ChangeKey(HEAP *h, int item, int priority)
 {
-	int currentPriority = 0;
-        int currentItem = 0;
-        int currentItemPosition = 0;
-        int lastItem = 0;
-        int lastItemPosition = 0;
-        int position = 0;
+    int currentPriority = 0;
+    int currentItem = 0;
+    int currentItemPosition = 0;
+    int lastItem = 0;
+    int lastItemPosition = 0;
+    int position = 0;
 
-	printf("Chankge Priority for item %d from priority %d to  %d\n", item, h->arr[h->position[item]].priority, priority);
+    currentPriority = h->arr[h->position[item]].priority;
+    currentItemPosition = h->position[item];
+    h->arr[h->position[item]].priority = priority;
 
-	currentPriority = h->arr[h->position[item]].priority;
-        currentItemPosition = h->position[item];
-	h->arr[h->position[item]].priority = priority;
+    currentItem = h->arr[h->position[item]].item;
+    lastItem = h->arr[h->nodeCount - 1].item;
+    lastItemPosition = h->position[lastItem];
 
-        currentItem = h->arr[h->position[item]].item;
-        lastItem = h->arr[h->nodeCount - 1].item;
-        lastItemPosition = h->position[lastItem];
+    data_swap(&(h->arr[h->position[item]]), &(h->arr[h->nodeCount - 1]));
+    position = h->position[item];
+    h->position[item] = h->position[lastItem];
+    h->position[lastItem] = position;
 
-        data_swap(&(h->arr[h->position[item]]), &(h->arr[h->nodeCount - 1]));
-        position = h->position[item];
-        h->position[item] = h->position[lastItem];
-        h->position[lastItem] = position;
-
-	if (currentPriority < priority) {
-            printf ("HeapifyDown\n");
-		HeapifyDown(h, 0);
-	} else {
-            printf ("HeapifyUp\n");
-		HeapifyDown(h, 0);
-	}
-        return 0;
+    if (currentPriority < priority) {
+        printf ("HeapifyDown\n");
+        HeapifyDown(h, 0);
+    } else {
+        printf ("HeapifyUp\n");
+        HeapifyDown(h, 0);
+    }
+    return 0;
 }
 
-void print_heap(HEAP *h)
-{
-	int i;
-	for (i = 0; i < h->nodeCount; i++) {
-		printf("(Item %d, Priority %d, Position %d) ", h->arr[i].item, h->arr[i].priority, h->position[h->arr[i].item]);
-
-	}
-	printf ("\n");
-}
 
 void print_pos(HEAP *h)
 {
-	int i = 0;
+    int i = 0;
 
-	for (; i < h->nodeCount; i++) {
-		if (h->position[h->arr[i].item] != -1) {
-			printf ("%d - Position %d\n", i, h->position[h->arr[i].item]);
-		}
-	}
+    for (; i < h->nodeCount; i++) {
+        if (h->position[h->arr[i].item] != -1) {
+            printf ("%d - Position %d\n", i, h->position[h->arr[i].item]);
+        }
+    }
 }
 
 int main()
@@ -357,7 +331,6 @@ int main()
 	ChangeKey(&h, 33, 22);
 	print_heap(&h);
 	DeleteItem(&h, 33);
-	DeleteItem(&h, 12);
-	print_heap(&h);
+	DeleteItem(&h, 45);
 	return 0;
 }
