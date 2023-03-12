@@ -22,6 +22,11 @@ typedef struct heap {
 	NODE *arr;
 }HEAP;
 
+int get_hash_key(HEAP *h, int value)
+{
+    return value % h->heapSize;
+}
+
 int get_node_child_left(int parentNode)
 {
     return (parentNode * 2) + 1;
@@ -34,6 +39,7 @@ int get_node_child_right(int parentNode)
 
 int get_node_parent(int nodeIndex)
 {
+    printf("Parent node %d\n", (nodeIndex -1) / 2);
     return (nodeIndex - 1) / 2;
 }
 
@@ -46,6 +52,23 @@ void print_heap(HEAP *h)
 
     }
     printf ("\n");
+}
+
+int update_node_position(HEAP *h, int nodeA, int nodeB)
+{
+    int tempPosition = 0;
+    int indexA = h->arr[nodeA].item;
+    int indexB = h->arr[nodeB].item;
+
+    int hashA = get_hash_key(h, h->arr[nodeA].item);
+    int hashb = get_hash_key(h, h->arr[nodeB].item);
+    printf ("Positions to swap: %d[%d], %d[%d]\n", hashA, h->position[hashA], hashb, h->position[hashb]);
+
+    tempPosition = h->position[indexA];
+    h->position[indexA] = h->position[indexB];
+    h->position[indexB] = tempPosition;
+    printf ("Positions swapped: %d[%d], %d[%d]\n", indexA, h->position[indexA], indexB, h->position[indexB]);
+    return 0;
 }
 
 /*
@@ -77,10 +100,6 @@ void StartHeap(HEAP *h, int heapSize)
     memset((void*)h->position, -1, heapSize * sizeof(int));
 }
 
-int get_hash_key(HEAP *h, int value)
-{
-    return value % h->heapSize;
-}
 
 void data_swap(NODE *n1, NODE *n2)
 {
@@ -125,11 +144,16 @@ int Insert(HEAP *h, int item, int priority)
         return -1;
     }
 
+    printf ("Inserting item %d, priority %d\n", item, priority);
     // Insert node to last available position first
-    lastNodeIndex = h->nodeCount++;
+    lastNodeIndex = h->nodeCount;
     printf ("lastNodeIndex %d, item %d, priority %d\n", lastNodeIndex, item, priority);
     h->arr[lastNodeIndex].item = item;
     h->arr[lastNodeIndex].priority = priority;
+    // Keep track of where items are stored
+    save_item_position(h, item, lastNodeIndex);
+
+    h->nodeCount++;
 
     // And put node where it corresponds
     while (lastNodeIndex) {
@@ -143,10 +167,10 @@ int Insert(HEAP *h, int item, int priority)
          * move value up in the heap
          */
         data_swap(&(h->arr[parentNodeIndex]), &(h->arr[lastNodeIndex]));
+        update_node_position(h, parentNodeIndex, lastNodeIndex);
+        printf("After\n");
         lastNodeIndex = parentNodeIndex;
     }
-    // Keep track of where items are stored
-    save_item_position(h, item, lastNodeIndex);
     return 0;
 }
 
@@ -163,9 +187,9 @@ int Insert(HEAP *h, int item, int priority)
 void HeapifyDown(HEAP *h, int parentNode)
 {
     int position = 0;
-    int maxNode = parentNode;
-    int left = (parentNode * 2) + 1;
-    int right = (parentNode * 2) + 2;
+    int maxNode = (parentNode);
+    int left = get_node_child_left(parentNode);
+    int right = get_node_child_right(parentNode);
 
     if (left < h->nodeCount && h->arr[left].priority < h->arr[maxNode].priority) {
         maxNode = left;
@@ -198,15 +222,17 @@ void HeapifyUp(HEAP *h, int parentNode)
 {
     int position = 0;
     int maxNode = parentNode;
-    int left = (parentNode * 2) + 1;
-    int right = (parentNode * 2) + 2;
+    int left = get_node_child_left(parentNode);
+    int right = get_node_child_right(parentNode);
 
     if (left < h->nodeCount && h->arr[left].priority > h->arr[maxNode].priority) {
         maxNode = left;
+        printf ("Max node left\n");
     }
 
     if (right < h->nodeCount && h->arr[right].priority > h->arr[maxNode].priority) {
         maxNode = right;
+        printf ("Max node right\n");
     }
 
     if (maxNode != parentNode) {
@@ -243,7 +269,7 @@ int Delete(HEAP *h, int nodeIndex)
 
     minNum = h->arr[nodeIndex].item;
 
-    lastItem = h->arr[h->nodeCount - 1].item;
+    //lastItem = h->arr[h->nodeCount - 1].item;
 
 
     HeapifyDown(h, 0);
@@ -265,34 +291,37 @@ int DeleteItem(HEAP *h, int item)
     return 0;
 }
 
-int ChangeKey(HEAP *h, int item, int priority)
+int ChangeKey(HEAP *h, int item, int newPriority)
 {
     int currentPriority = 0;
-    int currentItem = 0;
+    //int currentItem = 0;
     int currentItemPosition = 0;
     int lastItem = 0;
-    int lastItemPosition = 0;
+    //int lastItemPosition = 0;
     int position = 0;
 
-    currentPriority = h->arr[h->position[item]].priority;
-    currentItemPosition = h->position[item];
-    h->arr[h->position[item]].priority = priority;
+    currentItemPosition =  h->position[item];
+    currentPriority = h->arr[currentItemPosition].priority;
+    h->arr[currentItemPosition].priority = newPriority;
+    printf ("Change priority for item %d, %d to %d\n", item, currentPriority, newPriority);
 
-    currentItem = h->arr[h->position[item]].item;
+    //currentItem = h->arr[h->position[item]].item;
     lastItem = h->arr[h->nodeCount - 1].item;
-    lastItemPosition = h->position[lastItem];
+    //lastItemPosition = h->position[lastItem];
 
-    data_swap(&(h->arr[h->position[item]]), &(h->arr[h->nodeCount - 1]));
-    position = h->position[item];
-    h->position[item] = h->position[lastItem];
-    h->position[lastItem] = position;
+    //data_swap(&(h->arr[h->position[item]]), &(h->arr[h->nodeCount - 1]));
+    //position = h->position[item];
+    //h->position[item] = h->position[lastItem];
+    //h->position[lastItem] = position;
 
-    if (currentPriority < priority) {
+    if (currentPriority < newPriority) {
         printf ("HeapifyDown\n");
-        HeapifyDown(h, 0);
+        HeapifyDown(h, currentItemPosition );
+#if 1
     } else {
         printf ("HeapifyUp\n");
-        HeapifyDown(h, 0);
+        HeapifyUp(h, currentItemPosition );
+#endif
     }
     return 0;
 }
@@ -316,18 +345,25 @@ int main()
 	int arr[] = { 45, 12, 33, 3, 6 };
 	StartHeap(&h, HEAP_SIZE);
 
-	Insert(&h, arr[1], 10);
-	Insert(&h, arr[0], 11);
-	Insert(&h, arr[2], 12);
-	Insert(&h, arr[3], 13);
 	Insert(&h, arr[4], 14);
+	print_heap(&h);
+	Insert(&h, arr[1], 10);
+	print_heap(&h);
+	Insert(&h, arr[0], 11);
+	print_heap(&h);
+	Insert(&h, arr[2], 12);
+	print_heap(&h);
+	Insert(&h, arr[3], 34);
 	print_heap(&h);
 	print_pos(&h);
 
 	print_heap(&h);
-	ChangeKey(&h, 12, 144);
+	ChangeKey(&h, 12, 20);
+	print_heap(&h);
 	ChangeKey(&h, 45, 385);
+	print_heap(&h);
 	ChangeKey(&h, 12, 2);
+	print_heap(&h);
 	ChangeKey(&h, 33, 22);
 	print_heap(&h);
 	DeleteItem(&h, 33);
