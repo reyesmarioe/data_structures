@@ -208,6 +208,13 @@ void HeapifyDown(HEAP *h, int parentNode)
     }
 }
 
+void print_node_stats(HEAP *h, int node, char *msg)
+{
+    printf ("Node Stats %s: START\n", msg);
+    printf("(Item %d, Priority %d, Position %d)\n", 
+            h->arr[node].item, h->arr[node].priority, h->position[h->arr[node].item]);
+    printf ("Node Stats : END\n");
+}
 /*
  * Keeps heap property for min heap
  *
@@ -218,29 +225,34 @@ void HeapifyDown(HEAP *h, int parentNode)
  * OUTPUT
  * 	None
  */
-void HeapifyUp(HEAP *h, int parentNode)
+void HeapifyUp(HEAP *h, int currentNode)
 {
     int position = 0;
-    int maxNode = parentNode;
-    int left = get_node_child_left(parentNode);
-    int right = get_node_child_right(parentNode);
+    int parentNode = get_node_parent(currentNode);
+    int childNode = 0;
+    int left = get_node_child_left(currentNode);
+    int right = get_node_child_right(currentNode);
 
-    if (left < h->nodeCount && h->arr[left].priority > h->arr[maxNode].priority) {
-        maxNode = left;
+    print_node_stats(h, left, "left");
+    print_node_stats(h, right, "right");
+    print_node_stats(h, parentNode, "parent");
+    if (left < h->nodeCount && h->arr[left].priority > h->arr[parentNode].priority) {
+        childNode = left;
         printf ("Max node left\n");
     }
 
-    if (right < h->nodeCount && h->arr[right].priority > h->arr[maxNode].priority) {
-        maxNode = right;
+    if (right < h->nodeCount && h->arr[right].priority > h->arr[parentNode].priority) {
+        childNode = right;
         printf ("Max node right\n");
     }
 
-    if (maxNode != parentNode) {
-        data_swap(&(h->arr[parentNode]), &(h->arr[maxNode]));
+    if (currentNode < h->nodeCount && h->arr[currentNode].priority < h->arr[parentNode].priority) {
+        childNode = currentNode;
+        data_swap(&(h->arr[parentNode]), &(h->arr[childNode]));
         position = h->position[h->arr[parentNode].item];
-        h->position[h->arr[parentNode].item] = h->position[h->arr[maxNode].item];
-        h->position[h->arr[maxNode].item] = position;
-        HeapifyUp(h, maxNode);
+        h->position[h->arr[parentNode].item] = h->position[h->arr[childNode].item];
+        h->position[h->arr[childNode].item] = position;
+        HeapifyUp(h, childNode);
     }
 }
 
@@ -303,7 +315,7 @@ int ChangeKey(HEAP *h, int item, int newPriority)
     currentItemPosition =  h->position[item];
     currentPriority = h->arr[currentItemPosition].priority;
     h->arr[currentItemPosition].priority = newPriority;
-    printf ("Change priority for item %d, %d to %d\n", item, currentPriority, newPriority);
+    printf ("Change priority for [item, priority] [%d, %d] to priority %d\n", item, currentPriority, newPriority);
 
     //currentItem = h->arr[h->position[item]].item;
     lastItem = h->arr[h->nodeCount - 1].item;
